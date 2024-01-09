@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "842448987777",
+    "project_id": "animated-memory-377205",
+    "storage_bucket": "animated-memory-377205.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:842448987777:android:b3913a3e6bd1525ded4f80",
+        "android_client_info": {
+          "package_name": "com.example.firebase_datastoree"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKX7A-Ixua4Xzq7vENdmKrr9l4t1SET_s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
