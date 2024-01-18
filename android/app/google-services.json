@@ -12,7 +12,20 @@
           "package_name": "com.example.firebase_datastoree"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "842448987777-6let6rab3l1nrr26f699ti771esvg5gi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.firebase_datastoree",
+            "certificate_hash": "4528465b73be0ec2fb79266bf2d5752601fbc1e5"
+          }
+        },
+        {
+          "client_id": "842448987777-f5mo3ldqbq1s1a838msc7gc1l1kdi36h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDKX7A-Ixua4Xzq7vENdmKrr9l4t1SET_s"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "842448987777-f5mo3ldqbq1s1a838msc7gc1l1kdi36h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
