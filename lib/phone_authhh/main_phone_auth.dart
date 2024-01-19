@@ -1,18 +1,20 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:sms_autofill/sms_autofill.dart';
+
 import 'next_screen_phone_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: "AIzaSyDKX7A-Ixua4Xzq7vENdmKrr9l4t1SET_s",
-        projectId: "animated-memory-377205",
-        appId: '1:842448987777:android:b3913a3e6bd1525ded4f80',
-        messagingSenderId: '',
-        storageBucket: "animated-memory-377205.appspot.com",
-      ));
+    apiKey: "AIzaSyDKX7A-Ixua4Xzq7vENdmKrr9l4t1SET_s",
+    projectId: "animated-memory-377205",
+    appId: '1:842448987777:android:b3913a3e6bd1525ded4f80',
+    messagingSenderId: '',
+    storageBucket: "animated-memory-377205.appspot.com",
+  ));
   runApp(MyApp());
 }
 class MyApp extends StatelessWidget {
@@ -20,45 +22,94 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Firebase Phone Auth Example',
-      home: PhoneAuthScreen(),
+      home: LoginScreen(),
     );
   }
 }
 
-class PhoneAuthScreen extends StatefulWidget {
+class LoginScreen extends StatefulWidget {
   @override
-  _PhoneAuthScreenState createState() => _PhoneAuthScreenState();
+  _LoginScreenState createState() => _LoginScreenState();
 }
 
-class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
-  TextEditingController _phoneNumberController = TextEditingController();
-  TextEditingController _smsCodeController = TextEditingController();
+class _LoginScreenState extends State<LoginScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final TextEditingController _phoneNumberController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
 
   String _verificationId = "";
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.orange,
+        title: const Text('Login with OTP'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: _phoneNumberController,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Phone Number',
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: () async {
+                await _verifyPhoneNumber();
+              },
+              child: const Text('Send OTP'),
+            ),
+            const SizedBox(height: 16.0),
+            PinFieldAutoFill(
+              controller: _otpController,
+              decoration: UnderlineDecoration(
+                colorBuilder: FixedColorBuilder(Colors.black.withOpacity(0.3)),
+              ),
+              onCodeChanged: (String? value) {},
+            ),
+            const SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: () async {
+                await _signInWithPhoneNumber();
+              },
+              child: const Text('Verify OTP'),
+            ),
+
+          ],
+        ),
+      ),
+    );
+  }
+
+
   Future<void> _verifyPhoneNumber() async {
-    String phoneNumber = "${_phoneNumberController.text}";
     try {
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
+      await _auth.verifyPhoneNumber(
+        phoneNumber: _phoneNumberController.text,
+        timeout: const Duration(seconds: 60),
         verificationCompleted: (PhoneAuthCredential credential) async {
-          // Auto-retrieve verification code and sign in (only on Android)
-          await FirebaseAuth.instance.signInWithCredential(credential);
-          print("Verification completed");
-          _navigateToHomeScreen();
+          await _auth.signInWithCredential(credential);
+          print("Verification completed automatically: $credential");
         },
         verificationFailed: (FirebaseAuthException e) {
-          print("Verification failed: ${e.message}");
+          print("Verification failed: $e");
         },
         codeSent: (String verificationId, int? resendToken) {
-          // Store the verification ID for later use
-          setState(() {
-            _verificationId = verificationId;
-          });
-          print("Code Sent to $phoneNumber");
+          print("Code sent to ${_phoneNumberController.text}");
+          _verificationId = verificationId;
+
+          // Comment the following line to disable automatic code retrieval
+          // _autoRetrieveSMSCode(verificationId);
         },
         codeAutoRetrievalTimeout: (String verificationId) {
-          // Auto-retrieval timed out
+          print("Timeout reached: $verificationId");
         },
       );
     } catch (e) {
@@ -66,61 +117,35 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     }
   }
 
+// Uncomment this method if you want to enable automatic code retrieval
+// void _autoRetrieveSMSCode(String verificationId) async {
+//   final code = await SmsAutoFill().getAppSignature;
+//   print("SMS Code retrieved automatically: $code");
+//   _otpController.text = code;
+// }
+
+
+
   Future<void> _signInWithPhoneNumber() async {
-    String smsCode = _smsCodeController.text;
     try {
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
         verificationId: _verificationId,
-        smsCode: smsCode,
+        smsCode: _otpController.text,
       );
-      await FirebaseAuth.instance.signInWithCredential(credential);
-      print("Successfully signed in");
-      _navigateToHomeScreen();
-    } catch (e) {
-      print("Error signing in: $e");
-    }
-  }
 
-  void _navigateToHomeScreen() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => HomeScreen(),
-      ),
-    );
-  }
+      UserCredential userCredential = await _auth.signInWithCredential(credential);
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Phone Authentication'),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _phoneNumberController,
-              decoration: InputDecoration(labelText: 'Phone Number'),
-            ),
-            SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: _verifyPhoneNumber,
-              child: Text('Send Verification Code'),
-            ),
-            SizedBox(height: 16.0),
-            TextField(
-              controller: _smsCodeController,
-              decoration: InputDecoration(labelText: 'Verification Code'),
-            ),
-            SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: _signInWithPhoneNumber,
-              child: Text('Sign In'),
-            ),
-          ],
+      print("User signed in: ${userCredential.user?.uid}");
+
+      // Navigate to the new screen with the user ID
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(userId: userCredential.user?.uid),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      print("Error signing in with OTP: $e");
+    }
   }
 }

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
+  final String? userId;
+
+  HomeScreen({required this.userId});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -8,7 +12,7 @@ class HomeScreen extends StatelessWidget {
         title: Text('Home Screen'),
       ),
       body: Center(
-        child: Text('Welcome to the Home Screen!'),
+        child: Text('Welcome, User ID: $userId'),
       ),
     );
   }

@@ -1,74 +1,101 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_datastoree/gsignin/home.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-void main() async {
+void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-    apiKey: "AIzaSyDKX7A-Ixua4Xzq7vENdmKrr9l4t1SET_s",
-    projectId: "animated-memory-377205",
-    appId: '1:842448987777:android:b3913a3e6bd1525ded4f80',
-    messagingSenderId: '',
-    storageBucket: "animated-memory-377205.appspot.com",
-  ));
-  runApp(MaterialApp(home: SignInScreen()));
+        apiKey: "AIzaSyDKX7A-Ixua4Xzq7vENdmKrr9l4t1SET_s",
+        projectId: "animated-memory-377205",
+        appId: '1:842448987777:android:b3913a3e6bd1525ded4f80',
+        messagingSenderId: '',
+        storageBucket: "animated-memory-377205.appspot.com",
+      ));
+  runApp(MyApp());
 }
 
-class SignInScreen extends StatelessWidget {
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: SignInDemo(),
+    );
+  }
+}
+
+class SignInDemo extends StatefulWidget {
+  @override
+  State createState() => SignInDemoState();
+}
+
+class SignInDemoState extends State<SignInDemo> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
 
-  Future<UserCredential?> _signInWithGoogle() async {
+  Future<User?> _handleSignIn() async {
     try {
-      final GoogleSignInAccount? googleSignInAccount =
-          await googleSignIn.signIn();
+      // Trigger Google Sign In
+      GoogleSignInAccount? googleSignInAccount = await googleSignIn.signIn();
 
-      if (googleSignInAccount != null) {
-        final GoogleSignInAuthentication googleSignInAuthentication =
-            await googleSignInAccount.authentication;
-
-        final AuthCredential credential = GoogleAuthProvider.credential(
-          accessToken: googleSignInAuthentication.accessToken,
-          idToken: googleSignInAuthentication.idToken,
-        );
-
-        return await _auth.signInWithCredential(credential);
+      // If user canceled the sign-in, return null
+      if (googleSignInAccount == null) {
+        return null;
       }
-    } catch (e) {
-      print("Error signing in with Google: $e");
+
+      // Obtain GoogleSignInAuthentication and FirebaseUser
+      GoogleSignInAuthentication googleSignInAuthentication =
+      await googleSignInAccount.authentication;
+      AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleSignInAuthentication.accessToken,
+        idToken: googleSignInAuthentication.idToken,
+      );
+
+      UserCredential authResult = await _auth.signInWithCredential(credential);
+      User? user = authResult.user;
+
+      print("User signed in: ${user!.displayName}");
+
+      return user;
+    } catch (error) {
+      print("Error signing in with Google: $error");
+      return null;
     }
-    return null;
+  }
+
+  void _handleSignOut() async {
+    await googleSignIn.signOut();
+    await _auth.signOut();
+    print("User signed out");
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Google Sign-In'),
+        title: Text('Google Sign-In Demo'),
       ),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () async {
-            try {
-              UserCredential? userCredential = await _signInWithGoogle();
-              if (userCredential != null) {
-                print("Successfully signed in. Navigating to HomeScreen.");
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => HomeScreen(userCredential.user,),
-                  ),
-                );
-              } else {
-                print("Sign-in with Google failed.");
-              }
-
-            } catch (e) {
-              print("Error during navigation: $e");
-            }
-          }, child: Text("Sign in with Google"),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            ElevatedButton(
+              onPressed: () async {
+                User? user = await _handleSignIn();
+                if (user != null) {
+                  // Successful sign-in, perform desired actions
+                  print("Successful sign-in: ${user.displayName}");
+                }
+              },
+              child: Text('Sign In with Google'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _handleSignOut,
+              child: Text('Sign Out'),
+            ),
+          ],
         ),
       ),
     );
