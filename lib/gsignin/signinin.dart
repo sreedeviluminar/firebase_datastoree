@@ -64,6 +64,7 @@ class SignInScreen extends StatelessWidget {
               } else {
                 print("Sign-in with Google failed.");
               }
+
             } catch (e) {
               print("Error during navigation: $e");
             }
